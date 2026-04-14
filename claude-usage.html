@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shubham × Claude — Usage Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #15151a;
+    --surface2: #1c1c24;
+    --border: #2a2a38;
+    --amber: #f5a623;
+    --amber-dim: #c47d0e;
+    --cyan: #38d9c0;
+    --cyan-dim: #1fa891;
+    --text: #e8e6f0;
+    --text-muted: #7a788a;
+    --text-dim: #4a4860;
+    --red: #f05a5a;
+    --purple: #9b7fe8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background noise texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 32px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 64px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .header-left .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-left .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--amber);
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  h1 span {
+    color: var(--amber);
+  }
+
+  .header-right {
+    text-align: right;
+  }
+
+  .header-right p {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.8;
+  }
+
+  .header-right strong {
+    color: var(--cyan);
+    font-weight: 400;
+  }
+
+  /* ── STAT CARDS ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 64px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+  }
+  .stat-card:nth-child(1)::after { background: var(--amber); }
+  .stat-card:nth-child(2)::after { background: var(--cyan); }
+  .stat-card:nth-child(3)::after { background: var(--purple); }
+  .stat-card:nth-child(4)::after { background: var(--red); }
+  .stat-card:nth-child(5)::after { background: #5b9cf5; }
+
+  .stat-card .label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  .stat-card .value {
+    font-family: 'Syne', sans-serif;
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-card:nth-child(1) .value { color: var(--amber); }
+  .stat-card:nth-child(2) .value { color: var(--cyan); }
+  .stat-card:nth-child(3) .value { color: var(--purple); }
+  .stat-card:nth-child(4) .value { color: var(--red); }
+  .stat-card:nth-child(5) .value { color: #5b9cf5; }
+
+  .stat-card .sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* ── SECTION LABELS ── */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── GRID LAYOUTS ── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .grid-3-1 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .grid-1-2 {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .grid-2, .grid-3-1, .grid-1-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .full-width { margin-bottom: 24px; }
+
+  /* ── CHART CARDS ── */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 32px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .chart-card h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .chart-card .chart-subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+  }
+
+  .chart-wrap {
+    position: relative;
+  }
+
+  canvas { display: block; }
+
+  /* ── ACTIVITY HEATMAP ── */
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 6px;
+  }
+
+  .heatmap-col { display: flex; flex-direction: column; gap: 4px; }
+
+  .heatmap-month-label {
+    font-size: 9px;
+    color: var(--text-dim);
+    text-align: center;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .heatmap-cell {
+    width: 100%;
+    padding-top: 100%;
+    border-radius: 2px;
+    position: relative;
+    transition: transform 0.15s;
+    cursor: default;
+  }
+
+  .heatmap-cell:hover { transform: scale(1.3); z-index: 10; }
+
+  .heat-0 { background: var(--surface2); }
+  .heat-1 { background: #2d3a28; }
+  .heat-2 { background: #4a6840; }
+  .heat-3 { background: #6fa35a; }
+  .heat-4 { background: var(--cyan); }
+
+  /* ── SKILL BARS ── */
+  .skill-bars { display: flex; flex-direction: column; gap: 18px; }
+
+  .skill-row { }
+
+  .skill-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .skill-name {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .skill-pct {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .skill-track {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .skill-fill {
+    height: 100%;
+    border-radius: 2px;
+    transform-origin: left;
+    animation: growBar 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: var(--delay, 0s);
+  }
+
+  /* ── TAGS ── */
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 2px;
+    animation: fadeUp 0.4s ease both;
+    animation-delay: var(--d, 0s);
+  }
+
+  .tag.amber { border-color: var(--amber-dim); color: var(--amber); }
+  .tag.cyan { border-color: var(--cyan-dim); color: var(--cyan); }
+  .tag.purple { border-color: #6e56c5; color: var(--purple); }
+
+  /* ── INSIGHT BOX ── */
+  .insight-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .insight-box .insight-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+
+  .insight-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  .insight-list li {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .insight-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--amber);
+  }
+
+  .insight-list li strong {
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 32px;
+    margin-top: 64px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  footer p {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  footer .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--cyan);
+    display: inline-block;
+    margin-right: 8px;
+    animation: pulse 2s ease infinite;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes growBar {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <p class="eyebrow">Usage Intelligence Report</p>
+      <h1>Shubham <span>×</span><br>Claude</h1>
+    </div>
+    <div class="header-right">
+      <p>Generated <strong>March 2026</strong><br>
+      Based on <strong>9 months</strong> of conversations<br>
+      Across <strong>5 distinct</strong> usage categories</p>
+    </div>
+  </header>
+
+  <!-- STAT CARDS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <p class="label">Primary Use</p>
+      <p class="value">Dev</p>
+      <p class="sub">Active coding &amp; debugging sessions dominate</p>
+    </div>
+    <div class="stat-card">
+      <p class="label">Projects Tracked</p>
+      <p class="value">8+</p>
+      <p class="sub">Distinct shipping projects identified</p>
+    </div>
+    <div class="stat-card">
+      <p class="label">Tech Stack</p>
+      <p class="value">12</p>
+      <p class="sub">Unique technologies used across sessions</p>
+    </div>
+    <div class="stat-card">
+      <p class="label">Depth Score</p>
+      <p class="value">9.1</p>
+      <p class="sub">Highly iterative, context-rich exchanges</p>
+    </div>
+    <div class="stat-card">
+      <p class="label">Autonomy Level</p>
+      <p class="value">High</p>
+      <p class="sub">Claude as collaborator, not driver</p>
+    </div>
+  </div>
+
+  <!-- ROW 1: Donut + Bar -->
+  <p class="section-label">01 — Breakdown by Category</p>
+  <div class="grid-2">
+
+    <div class="chart-card">
+      <h2>Usage by Category</h2>
+      <p class="chart-subtitle">Share of total conversation volume</p>
+      <div class="chart-wrap" style="height: 280px;">
+        <canvas id="donutChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Session Intent Distribution</h2>
+      <p class="chart-subtitle">What you're trying to accomplish per session</p>
+      <div class="chart-wrap" style="height: 280px;">
+        <canvas id="intentBar"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 2: Radar + Skills -->
+  <p class="section-label">02 — Engagement Profile</p>
+  <div class="grid-1-2">
+
+    <div class="chart-card">
+      <h2>Engagement Dimensions</h2>
+      <p class="chart-subtitle">How you engage vs typical Claude user</p>
+      <div class="chart-wrap" style="height: 280px;">
+        <canvas id="radarChart"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Technology Frequency</h2>
+      <p class="chart-subtitle">How often each tech appeared across sessions</p>
+      <div class="chart-wrap" style="height: 280px;">
+        <canvas id="techBar"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ROW 3: Activity Timeline -->
+  <p class="section-label">03 — Activity Over Time</p>
+  <div class="full-width">
+    <div class="chart-card">
+      <h2>Usage Intensity — Last 9 Months</h2>
+      <p class="chart-subtitle">Activity volume by week across project phases</p>
+      <div class="chart-wrap" style="height: 200px;">
+        <canvas id="timelineChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 4: Heatmap -->
+  <div class="full-width">
+    <div class="chart-card">
+      <h2>Topic Heatmap</h2>
+      <p class="chart-subtitle">Relative intensity of topic across monthly activity</p>
+      <div id="heatmap" style="margin-top: 8px;"></div>
+    </div>
+  </div>
+
+  <!-- ROW 5: Polar + Behavior -->
+  <p class="section-label">04 — Behavioral Patterns</p>
+  <div class="grid-3-1">
+
+    <div class="chart-card">
+      <h2>Collaboration Style Score</h2>
+      <p class="chart-subtitle">Indexed traits across your Claude sessions (0–10)</p>
+      <div class="skill-bars" style="margin-top: 8px;">
+        <div class="skill-row">
+          <div class="skill-header"><span class="skill-name">Specificity of requests</span><span class="skill-pct">9.4</span></div>
+          <div class="skill-track"><div class="skill-fill" style="width:94%; background: var(--amber); --delay:0.1s;"></div></div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-header"><span class="skill-name">Iterative refinement</span><span class="skill-pct">9.1</span></div>
+          <div class="skill-track"><div class="skill-fill" style="width:91%; background: var(--cyan); --delay:0.2s;"></div></div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-header"><span class="skill-name">Technical depth</span><span class="skill-pct">8.8</span></div>
+          <div class="skill-track"><div class="skill-fill" style="width:88%; background: var(--purple); --delay:0.3s;"></div></div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-header"><span class="skill-name">Cross-domain breadth</span><span class="skill-pct">8.2</span></div>
+          <div class="skill-track"><div class="skill-fill" style="width:82%; background: #5b9cf5; --delay:0.4s;"></div></div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-header"><span class="skill-name">Editorial voice control</span><span class="skill-pct">8.5</span></div>
+          <div class="skill-track"><div class="skill-fill" style="width:85%; background: var(--red); --delay:0.5s;"></div></div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-header"><span class="skill-name">Context richness per session</span><span class="skill-pct">9.0</span></div>
+          <div class="skill-track"><div class="skill-fill" style="width:90%; background: var(--amber); --delay:0.6s;"></div></div>
+        </div>
+        <div class="skill-row">
+          <div class="skill-header"><span class="skill-name">Willingness to push back</span><span class="skill-pct">7.9</span></div>
+          <div class="skill-track"><div class="skill-fill" style="width:79%; background: var(--cyan); --delay:0.7s;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h2>Output Mode Split</h2>
+      <p class="chart-subtitle">What Claude produces for you</p>
+      <div class="chart-wrap" style="height: 240px;">
+        <canvas id="polarChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- INSIGHT BOX -->
+  <div class="insight-box">
+    <p class="insight-label">Key Patterns Identified</p>
+    <ul class="insight-list">
+      <li><strong>You bring real problems.</strong> Almost no toy examples — every session has actual production code or live data attached.</li>
+      <li><strong>High follow-through rate.</strong> Projects span multiple sessions with iterative depth, not one-off questions.</li>
+      <li><strong>Strong editorial filter.</strong> You use Claude for writing but consistently push back on abstract or metaphor-heavy language.</li>
+      <li><strong>Hardware &amp; AI hybrid.</strong> Unusual mix of equipment evaluation (gimbal) alongside advanced browser engineering.</li>
+      <li><strong>Tool awareness is high.</strong> You understand what Claude can and can't do — and you scope prompts accordingly.</li>
+      <li><strong>Aesthetic consistency.</strong> Dark theme, amber/cyan accents appear across multiple projects — a design identity is forming.</li>
+    </ul>
+  </div>
+
+  <!-- TAGS -->
+  <div class="chart-card" style="margin-bottom: 24px;">
+    <h2>Technology Fingerprint</h2>
+    <p class="chart-subtitle">Every tool, library, and concept surfaced across your sessions</p>
+    <div class="tags" style="margin-top: 16px;">
+      <span class="tag amber" style="--d:0.0s">D3.js</span>
+      <span class="tag amber" style="--d:0.05s">TopoJSON</span>
+      <span class="tag amber" style="--d:0.1s">React</span>
+      <span class="tag amber" style="--d:0.15s">Recharts</span>
+      <span class="tag cyan" style="--d:0.2s">pandas</span>
+      <span class="tag cyan" style="--d:0.25s">JavaScript</span>
+      <span class="tag cyan" style="--d:0.3s">Chrome Extensions</span>
+      <span class="tag cyan" style="--d:0.35s">Firefox Extensions</span>
+      <span class="tag" style="--d:0.4s">MutationObserver</span>
+      <span class="tag" style="--d:0.45s">CORS</span>
+      <span class="tag" style="--d:0.5s">window.postMessage</span>
+      <span class="tag purple" style="--d:0.55s">Network Interception</span>
+      <span class="tag purple" style="--d:0.6s">MAIN-world Injection</span>
+      <span class="tag" style="--d:0.65s">CSV / TopoJSON</span>
+      <span class="tag" style="--d:0.7s">GitHub CDN</span>
+      <span class="tag cyan" style="--d:0.75s">Autocomplete UX</span>
+      <span class="tag amber" style="--d:0.8s">Choropleth Maps</span>
+      <span class="tag" style="--d:0.85s">SOC Codes</span>
+      <span class="tag purple" style="--d:0.9s">ControlNet</span>
+      <span class="tag" style="--d:0.95s">DJI Ronin-S</span>
+      <span class="tag" style="--d:1.0s">LinkedIn</span>
+      <span class="tag amber" style="--d:1.05s">AI Pipelines</span>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p><span class="dot"></span>Derived from conversation memory · Anthropic Claude · March 2026</p>
+    <p>Built with Chart.js · Syne + DM Mono</p>
+  </footer>
+
+</div>
+
+<script>
+const C = {
+  amber: '#f5a623', amberDim: 'rgba(245,166,35,0.15)',
+  cyan: '#38d9c0', cyanDim: 'rgba(56,217,192,0.15)',
+  purple: '#9b7fe8', purpleDim: 'rgba(155,127,232,0.15)',
+  red: '#f05a5a', redDim: 'rgba(240,90,90,0.15)',
+  blue: '#5b9cf5', blueDim: 'rgba(91,156,245,0.15)',
+  border: '#2a2a38', text: '#7a788a', bg: '#15151a'
+};
+
+Chart.defaults.color = C.text;
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size = 11;
+
+// 1. DONUT CHART
+new Chart(document.getElementById('donutChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Dev & Debugging', 'Data Visualization', 'Professional Writing', 'Research & Eval', 'Applied AI Tooling'],
+    datasets: [{
+      data: [40, 28, 15, 10, 7],
+      backgroundColor: [C.amber, C.cyan, C.purple, C.blue, C.red],
+      borderColor: '#0d0d0f',
+      borderWidth: 3,
+      hoverOffset: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    cutout: '68%',
+    plugins: {
+      legend: {
+        position: 'right',
+        labels: { boxWidth: 10, padding: 14, font: { size: 10 } }
+      },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.label}: ${ctx.parsed}%`
+        }
+      }
+    }
+  }
+});
+
+// 2. SESSION INTENT BAR
+new Chart(document.getElementById('intentBar'), {
+  type: 'bar',
+  data: {
+    labels: ['Build', 'Debug', 'Analyze', 'Write', 'Research', 'Evaluate'],
+    datasets: [{
+      data: [38, 27, 15, 10, 6, 4],
+      backgroundColor: [C.amber, C.amberDim, C.cyan, C.cyanDim, C.purple, C.purpleDim].map(c => c),
+      backgroundColor: [C.amber, '#c47d0e', C.cyan, '#1fa891', C.purple, '#6e56c5'],
+      borderRadius: 2,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}% of sessions` } }
+    },
+    scales: {
+      x: { grid: { color: 'transparent' }, ticks: { color: C.text } },
+      y: {
+        grid: { color: C.border },
+        ticks: { callback: v => v + '%', color: C.text },
+        border: { color: 'transparent' },
+        max: 50
+      }
+    }
+  }
+});
+
+// 3. RADAR CHART
+new Chart(document.getElementById('radarChart'), {
+  type: 'radar',
+  data: {
+    labels: ['Specificity', 'Depth', 'Iteration', 'Breadth', 'Autonomy', 'Follow-thru'],
+    datasets: [
+      {
+        label: 'Shubham',
+        data: [9.4, 8.8, 9.1, 8.2, 9.5, 9.0],
+        borderColor: C.amber,
+        backgroundColor: 'rgba(245,166,35,0.12)',
+        pointBackgroundColor: C.amber,
+        pointRadius: 4,
+        borderWidth: 2
+      },
+      {
+        label: 'Avg User',
+        data: [5.5, 5.0, 4.8, 5.2, 4.5, 5.0],
+        borderColor: C.text,
+        backgroundColor: 'rgba(122,120,138,0.07)',
+        pointBackgroundColor: C.text,
+        pointRadius: 3,
+        borderWidth: 1,
+        borderDash: [4, 4]
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12 } } },
+    scales: {
+      r: {
+        min: 0, max: 10,
+        grid: { color: C.border },
+        angleLines: { color: C.border },
+        pointLabels: { color: C.text, font: { size: 10 } },
+        ticks: { display: false, stepSize: 2 }
+      }
+    }
+  }
+});
+
+// 4. TECH FREQUENCY BAR (horizontal)
+new Chart(document.getElementById('techBar'), {
+  type: 'bar',
+  data: {
+    labels: ['D3.js', 'React', 'pandas', 'JS/Browser API', 'Extensions', 'CSS/HTML', 'Chart libs', 'Python'],
+    datasets: [{
+      data: [9, 8, 7, 10, 8, 6, 5, 4],
+      backgroundColor: C.cyan,
+      borderRadius: 2,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        grid: { color: C.border },
+        ticks: { color: C.text },
+        border: { color: 'transparent' },
+        max: 12
+      },
+      y: { grid: { color: 'transparent' }, ticks: { color: C.text } }
+    }
+  }
+});
+
+// 5. TIMELINE
+const weeks = 39;
+const raw = [1,1,2,1,0,1,2,3,4,3,2,3,4,5,4,3,4,5,6,7,6,5,6,7,8,7,6,7,8,9,8,7,8,9,10,9,8,9,10];
+const labels = raw.map((_, i) => {
+  const d = new Date(2025, 5, 1);
+  d.setDate(d.getDate() + i * 7);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+});
+
+new Chart(document.getElementById('timelineChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [{
+      data: raw,
+      borderColor: C.amber,
+      backgroundColor: 'rgba(245,166,35,0.08)',
+      fill: true,
+      tension: 0.45,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      pointHoverBackgroundColor: C.amber,
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: {
+        grid: { color: 'transparent' },
+        ticks: { maxTicksLimit: 8, color: C.text }
+      },
+      y: {
+        grid: { color: C.border },
+        ticks: { display: false },
+        border: { color: 'transparent' }
+      }
+    }
+  }
+});
+
+// 6. HEATMAP
+const topics = ['Dev / Code', 'Data Viz', 'Writing', 'Research', 'AI Tools'];
+const months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+const heatData = [
+  [1,2,2,3,3,4,4,4,4],
+  [0,1,1,2,3,3,4,4,3],
+  [0,0,1,1,2,2,2,3,3],
+  [0,1,1,2,1,2,2,2,3],
+  [0,0,1,1,1,2,3,3,4]
+];
+
+const heatContainer = document.getElementById('heatmap');
+const table = document.createElement('div');
+table.style.cssText = 'display:grid; grid-template-columns: 90px 1fr; gap: 0;';
+
+const topicLabels = document.createElement('div');
+topicLabels.style.cssText = 'display:flex; flex-direction:column; justify-content:space-around; padding: 24px 0 4px;';
+topics.forEach(t => {
+  const el = document.createElement('div');
+  el.style.cssText = 'font-size:10px; color: var(--text-dim); text-align:right; padding-right:12px; letter-spacing: 0.05em;';
+  el.textContent = t;
+  topicLabels.appendChild(el);
+});
+
+const grid = document.createElement('div');
+grid.style.cssText = 'display:flex; flex-direction:column; gap:4px;';
+
+// Month headers
+const monthRow = document.createElement('div');
+monthRow.style.cssText = 'display:grid; grid-template-columns: repeat(9,1fr); gap:4px; margin-bottom:6px;';
+months.forEach(m => {
+  const el = document.createElement('div');
+  el.style.cssText = 'font-size:9px; color: var(--text-dim); text-align:center; letter-spacing:0.08em; text-transform:uppercase;';
+  el.textContent = m;
+  monthRow.appendChild(el);
+});
+grid.appendChild(monthRow);
+
+heatData.forEach(row => {
+  const rowEl = document.createElement('div');
+  rowEl.style.cssText = 'display:grid; grid-template-columns: repeat(9,1fr); gap:4px;';
+  row.forEach(val => {
+    const cell = document.createElement('div');
+    cell.style.cssText = 'height:20px; border-radius:2px; transition: transform 0.15s; cursor:default;';
+    const colors = ['#1c1c24', '#2d3a28', '#4a6840', '#6fa35a', '#38d9c0'];
+    cell.style.background = colors[val];
+    cell.addEventListener('mouseenter', () => cell.style.transform = 'scale(1.2)');
+    cell.addEventListener('mouseleave', () => cell.style.transform = 'scale(1)');
+    rowEl.appendChild(cell);
+  });
+  grid.appendChild(rowEl);
+});
+
+table.appendChild(topicLabels);
+table.appendChild(grid);
+heatContainer.appendChild(table);
+
+// Legend
+const legend = document.createElement('div');
+legend.style.cssText = 'display:flex; align-items:center; gap:8px; margin-top:16px; justify-content:flex-end;';
+legend.innerHTML = `<span style="font-size:10px; color:var(--text-dim)">Low</span>`;
+['#1c1c24','#2d3a28','#4a6840','#6fa35a','#38d9c0'].forEach(c => {
+  const sq = document.createElement('div');
+  sq.style.cssText = `width:14px; height:14px; background:${c}; border-radius:2px;`;
+  legend.appendChild(sq);
+});
+legend.innerHTML += `<span style="font-size:10px; color:var(--text-dim)">High</span>`;
+heatContainer.appendChild(legend);
+
+// 7. POLAR CHART
+new Chart(document.getElementById('polarChart'), {
+  type: 'polarArea',
+  data: {
+    labels: ['Code', 'Analysis', 'Writing', 'Research', 'Eval'],
+    datasets: [{
+      data: [38, 25, 18, 12, 7],
+      backgroundColor: [
+        'rgba(245,166,35,0.7)',
+        'rgba(56,217,192,0.7)',
+        'rgba(155,127,232,0.7)',
+        'rgba(91,156,245,0.7)',
+        'rgba(240,90,90,0.7)'
+      ],
+      borderColor: '#0d0d0f',
+      borderWidth: 2
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10, font: { size: 10 } } }
+    },
+    scales: {
+      r: {
+        grid: { color: C.border },
+        ticks: { display: false }
+      }
+    }
+  }
+});
+
+// Stagger animations
+document.querySelectorAll('.stat-card, .chart-card, .insight-box').forEach((el, i) => {
+  el.style.animationDelay = `${i * 0.06}s`;
+});
+</script>
+</body>
+</html>
